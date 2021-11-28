@@ -10,10 +10,27 @@ dplyr::glimpse(imdb_pessoas)
 dplyr::glimpse(imdb_avaliacoes)
 
 
+imdb <- imdb |>
+  tidyr::separate(
+    col = receita,
+    into = c("moeda_receita", "valor_receita"),
+    sep = " ") |>
+  tidyr::separate(
+    col = orcamento,
+    into = c("moeda_orcamento", "valor_orcamento"),
+    sep = " ") |>
+  dplyr::mutate(
+    moeda_receita = dplyr::if_else(moeda_receita == "$", "US$", moeda_receita),
+    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "US$", moeda_orcamento),
+    valor_receita = as.numeric(valor_receita),
+    valor_orcamento = as.numeric(valor_orcamento),
+    lucro = valor_receita - valor_orcamento
+  )
+
 
 # -------------------------------------------------------------------------
 
-1. Qual o mês do ano com o maior número de filmes? E o dia do ano?
+# 1. Qual o mês do ano com o maior número de filmes? E o dia do ano?
 
 imdb |>
   dplyr::mutate(
@@ -36,7 +53,7 @@ imdb |>
 
 # -------------------------------------------------------------------------
 
-2. Qual o top 5 países com mais filmes na base?
+# 2. Qual o top 5 países com mais filmes na base?
 
 imdb |>
   dplyr::count(pais) |>
@@ -46,54 +63,25 @@ imdb |>
 
 # -------------------------------------------------------------------------
 
-3. Liste todas as moedas que aparecem nas colunas `orcamento` e `receita` da base `imdb_completa`.
+# 3. Liste todas as moedas que aparecem nas colunas `orcamento` e `receita` da base `imdb_completa`.
 
 imdb |>
-  dplyr::select(orcamento) |>
-  dplyr::filter(!is.na(orcamento)) |>
-  tidyr::separate(
-    col = orcamento,
-    into = c("moeda", "valor_orcamento"),
-    sep = " ") |>
-  dplyr::mutate(
-    moeda = dplyr::if_else(moeda == "$", "US$", moeda)
-  ) |>
-  dplyr::distinct(moeda)
+  dplyr::select(moeda_orcamento) |>
+  dplyr::filter(!is.na(moeda_orcamento)) |>
+  dplyr::distinct(moeda_orcamento)
 
 imdb |>
-  dplyr::select(receita) |>
-  dplyr::filter(!is.na(receita)) |>
-  tidyr::separate(
-    col = receita,
-    into = c("moeda", "valor_receita"),
-    sep = " ") |>
-  dplyr::mutate(
-    moeda = dplyr::if_else(moeda == "$", "US$", moeda)
-  ) |>
-  dplyr::distinct(moeda)
+  dplyr::select(moeda_receita) |>
+  dplyr::filter(!is.na(moeda_receita)) |>
+  dplyr::distinct(moeda_receita)
 
 
 
 # -------------------------------------------------------------------------
 
-4. Considerando apenas orçamentos e receitas em dólar ($), qual o gênero com maior lucro? E com maior nota média?
+# 4. Considerando apenas orçamentos e receitas em dólar ($), qual o gênero com maior lucro? E com maior nota média?
 
 imdb |>
-  tidyr::separate(
-    col = receita,
-    into = c("moeda_receita", "valor_receita"),
-    sep = " ") |>
-  tidyr::separate(
-    col = orcamento,
-    into = c("moeda_orcamento", "valor_orcamento"),
-    sep = " ") |>
-  dplyr::mutate(
-    moeda_receita = dplyr::if_else(moeda_receita == "$", "US$", moeda_receita),
-    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "US$", moeda_orcamento),
-    valor_receita = as.numeric(valor_receita),
-    valor_orcamento = as.numeric(valor_orcamento),
-    lucro = valor_receita - valor_orcamento
-  ) |>
   dplyr::filter(!is.na(lucro)) |>
   dplyr::filter(moeda_receita == "US$" & moeda_orcamento == "US$") |>
   dplyr::select(genero, lucro) |>
@@ -111,12 +99,12 @@ imdb |>
 
 # -------------------------------------------------------------------------
 
-5. Dentre os filmes na base `imdb_completa`, escolha o seu favorito. Então faça os itens a seguir:
+# 5. Dentre os filmes na base `imdb_completa`, escolha o seu favorito. Então faça os itens a seguir:
 
 imdb |>
   dplyr::filter(titulo == "Interstellar")
 
-  a) Quem dirigiu o filme? Faça uma ficha dessa pessoa: idade (hoje em dia ou data de falecimento), onde nasceu, quantos filmes já dirigiu, qual o lucro médio dos filmes que dirigiu (considerando apenas valores em dólar) e outras informações que achar interessante (base `imdb_pessoas`).
+  # a) Quem dirigiu o filme? Faça uma ficha dessa pessoa: idade (hoje em dia ou data de falecimento), onde nasceu, quantos filmes já dirigiu, qual o lucro médio dos filmes que dirigiu (considerando apenas valores em dólar) e outras informações que achar interessante (base `imdb_pessoas`).
 
 imdb |>
   dplyr::filter(titulo == "Interstellar") |>
@@ -145,21 +133,6 @@ imdb |>
   dplyr::arrange(desc(ano))
 
 imdb |>
-  tidyr::separate(
-    col = receita,
-    into = c("moeda_receita", "valor_receita"),
-    sep = " ") |>
-  tidyr::separate(
-    col = orcamento,
-    into = c("moeda_orcamento", "valor_orcamento"),
-    sep = " ") |>
-  dplyr::mutate(
-    moeda_receita = dplyr::if_else(moeda_receita == "$", "US$", moeda_receita),
-    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "US$", moeda_orcamento),
-    valor_receita = as.numeric(valor_receita),
-    valor_orcamento = as.numeric(valor_orcamento),
-    lucro = valor_receita - valor_orcamento
-  ) |>
   dplyr::filter(!is.na(lucro)) |>
   dplyr::filter(moeda_receita == "US$" & moeda_orcamento == "US$") |>
   dplyr::filter(direcao == "Christopher Nolan") |>
@@ -168,8 +141,52 @@ imdb |>
     media_lucro = mean(lucro, na.rm = TRUE)
   )
 
-  b) Qual a posição desse filme no ranking de notas do IMDB? E no ranking de lucro (considerando apenas valores em dólar)?
+  # b) Qual a posição desse filme no ranking de notas do IMDB? E no ranking de lucro (considerando apenas valores em dólar)?
 
-  c) Em que dia esse filme foi lançado? E dia da semana? Algum outro filme foi lançado no mesmo dia? Quantos anos você tinha nesse dia?
+imdb |>
+  dplyr::filter(titulo == "Interstellar") |>
+  dplyr::select(titulo, id_filme)
 
-  d) Faça um gráfico representando a distribuição da nota atribuída a esse filme por idade (base `imdb_avaliacoes`).
+imdb_avaliacoes |>
+  dplyr::arrange(desc(nota_media)) |>
+  dplyr::mutate(
+    ranking_nota = 1:nrow(imdb_avaliacoes)
+  ) |>
+  dplyr::filter(id_filme == "tt0816692") |>
+  dplyr::select(ordem, nota_media)
+
+tmp <- imdb |>
+  dplyr::filter(!is.na(lucro)) |>
+  dplyr::filter(moeda_receita == "US$" & moeda_orcamento == "US$") |>
+  dplyr::arrange(desc(lucro))
+
+tmp |>
+  dplyr::mutate(
+    ranking_lucro = 1:nrow(tmp)
+  ) |>
+  dplyr::filter(titulo == "Interstellar") |>
+  dplyr::select(ranking_lucro, lucro)
+
+rm('tmp')
+
+  # c) Em que dia esse filme foi lançado? E dia da semana? Algum outro filme foi lançado no mesmo dia? Quantos anos você tinha nesse dia?
+
+imdb |>
+  dplyr::filter(titulo == "Interstellar") |>
+  dplyr::mutate(
+    dia_lancamento = lubridate::day(data_lancamento),
+    dia_semana_lancamento = lubridate::wday(data_lancamento, label = TRUE)
+  ) |>
+  dplyr::select(titulo, dia_lancamento, dia_semana_lancamento)
+
+imdb |>
+  dplyr::mutate(
+    data_lancamento = lubridate::as_date(data_lancamento),
+    dia_lancamento = lubridate::day(data_lancamento),
+    dia_semana_lancamento = lubridate::wday(data_lancamento, label = TRUE)
+  ) |>
+  dplyr::filter(dia_lancamento == 6) |>
+  dplyr::select(titulo, dia_lancamento, dia_semana_lancamento)
+
+
+ # d) Faça um gráfico representando a distribuição da nota atribuída a esse filme por idade (base `imdb_avaliacoes`).
