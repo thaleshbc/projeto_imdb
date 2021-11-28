@@ -131,6 +131,43 @@ imdb_pessoas |>
   ) |>
   dplyr::select(idade)
 
+imdb_pessoas |>
+  dplyr::filter(nome == "Christopher Nolan") |>
+  dplyr::select(local_nascimento)
+
+imdb |>
+  dplyr::count(direcao) |>
+  dplyr::filter(direcao == "Christopher Nolan")
+
+imdb |>
+  dplyr::filter(direcao == "Christopher Nolan") |>
+  dplyr::select(ano, titulo) |>
+  dplyr::arrange(desc(ano))
+
+imdb |>
+  tidyr::separate(
+    col = receita,
+    into = c("moeda_receita", "valor_receita"),
+    sep = " ") |>
+  tidyr::separate(
+    col = orcamento,
+    into = c("moeda_orcamento", "valor_orcamento"),
+    sep = " ") |>
+  dplyr::mutate(
+    moeda_receita = dplyr::if_else(moeda_receita == "$", "US$", moeda_receita),
+    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "US$", moeda_orcamento),
+    valor_receita = as.numeric(valor_receita),
+    valor_orcamento = as.numeric(valor_orcamento),
+    lucro = valor_receita - valor_orcamento
+  ) |>
+  dplyr::filter(!is.na(lucro)) |>
+  dplyr::filter(moeda_receita == "US$" & moeda_orcamento == "US$") |>
+  dplyr::filter(direcao == "Christopher Nolan") |>
+  dplyr::group_by(direcao) |>
+  dplyr::summarise(
+    media_lucro = mean(lucro, na.rm = TRUE)
+  )
+
   b) Qual a posição desse filme no ranking de notas do IMDB? E no ranking de lucro (considerando apenas valores em dólar)?
 
   c) Em que dia esse filme foi lançado? E dia da semana? Algum outro filme foi lançado no mesmo dia? Quantos anos você tinha nesse dia?
