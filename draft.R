@@ -220,21 +220,45 @@ imdb_avaliacoes %>%
     names_to = "faixa_etaria",
     values_to = "nota_media") %>%
   ggplot2::ggplot(ggplot2::aes(x = faixa_etaria, y = nota_media)) +
-  ggplot2::geom_bar(stat = "identity") +
+  ggplot2::geom_bar(
+    stat = "identity",
+    width = 0.5,
+    fill = "#6959CD") +
   ggplot2::geom_text(
     stat = "identity",
     ggplot2::aes(label = nota_media),
     vjust = 1.5,
     color = "white",
-    size = 5) +
+    size = 6,
+  ) +
   ggplot2::labs(
     title = "Notas por faixa etária",
+    subtitle = "Notas médias obtidas do conjunto de dados IMDB avaliações",
     x = "Faixa Etária",
-    y = "Nota Média"
+    y = "Nota Média",
+    caption = "Fonte: IMDB Avaliações"
+  ) +
+  ggplot2::scale_x_discrete(
+    breaks = c("idade_0_18", "idade_18_30", "idade_30_45", "idade_45_mais"),
+    labels = c("0 a 18", "18 a 30", "30 a 45", "45 +")
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
-    plot.title = ggplot2::element_text(hjust = 0.5)
+    plot.title = ggplot2::element_text(
+      size = 26,
+      face = "bold"),
+    plot.subtitle = ggplot2::element_text(
+      size = 18,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 14,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 14,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(size = 13),
+    axis.text.y = ggplot2::element_text(size = 13)
   )
 
 
