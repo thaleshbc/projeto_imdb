@@ -24,32 +24,163 @@ imdb <- imdb %>%
     moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "US$", moeda_orcamento),
     valor_receita = as.numeric(valor_receita),
     valor_orcamento = as.numeric(valor_orcamento),
-    lucro = valor_receita - valor_orcamento
+    lucro = valor_receita - valor_orcamento,
+    data_lancamento = lubridate::as_date(data_lancamento)
   )
+
+imdb_pessoas <- imdb_pessoas %>%
+  dplyr::mutate(
+    data_nascimento = lubridate::as_date(data_nascimento),
+    data_falecimento = lubridate::as_date(data_falecimento)
+  )
+
 
 
 # -------------------------------------------------------------------------
 
 # 1. Qual o mês do ano com o maior número de filmes? E o dia do ano?
 
+# Tabela com a quantidade de filmes lançados por mes em ordem decrescente
 imdb %>%
   dplyr::mutate(
-    data_lancamento = lubridate::as_date(data_lancamento),
     mes = lubridate::month(data_lancamento, label = TRUE)
   ) %>%
   dplyr::filter(!is.na(data_lancamento)) %>%
   dplyr::count(mes) %>%
   dplyr::arrange(desc(n))
 
+# Tabela com a qauntidade de filmes lançados por mes em ordem decrescente
 imdb %>%
   dplyr::mutate(
-    data_lancamento = lubridate::as_date(data_lancamento),
     dia = lubridate::day(data_lancamento)
   ) %>%
   dplyr::filter(!is.na(data_lancamento)) %>%
   dplyr::count(dia) %>%
   dplyr::arrange(desc(n))
 
+# Treemap com a quantidade de filmes lançados por mes
+imdb %>%
+  dplyr::mutate(
+    mes = lubridate::month(data_lancamento, label = TRUE, abbr = FALSE),
+    mes = stringr::str_to_title(mes)
+  ) %>%
+  dplyr::filter(!is.na(data_lancamento)) %>%
+  dplyr::count(mes) %>%
+  dplyr::rename(quantidade = n) %>%
+  ggplot2::ggplot(ggplot2::aes(
+    fill = quantidade,
+    area = quantidade,
+    label = paste(mes, quantidade, sep = "\n"))
+  ) +
+  treemapify::geom_treemap() +
+  treemapify::geom_treemap_text(
+    color = 'white',
+    size = 1,
+    grow = TRUE
+  ) +
+  ggplot2::labs(
+    title = 'Quantidade de filmes lançados por mês',
+    caption = 'Fonte: IMDB',
+    fill = "Quantidade"
+  ) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 22,
+      face = "bold"),
+    plot.caption = ggplot2::element_text(face = "italic"),
+  ) +
+  ggplot2::scale_fill_viridis_c()
+
+# Grafico de linha com a quantidade de filmes lançados por dia
+imdb %>%
+  dplyr::mutate(
+    dia = lubridate::day(data_lancamento)
+  ) %>%
+  dplyr::filter(!is.na(data_lancamento)) %>%
+  dplyr::count(dia) %>%
+  dplyr::rename(quantidade = n) %>%
+  ggplot2::ggplot(ggplot2::aes(x = dia, y = quantidade)) +
+  ggplot2::geom_line(
+    stat = 'identity',
+    size = 1,
+    color = '#7FFFD4'
+  ) +
+  ggplot2::geom_point(
+    stat = 'identity',
+    size = 3,
+    color = '#66CDAA'
+  ) +
+  ggplot2::geom_text(
+    ggplot2::aes(label = quantidade),
+    hjust = 1.2,
+    vjust = 0,
+    size = 3
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::labs(
+    title = 'Quantidade de filmes lançados por dia',
+    x = 'Dia',
+    y = 'Quantidade',
+    caption = 'Fonte: IMDB'
+  ) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 22,
+      face = "bold"),
+    plot.caption = ggplot2::element_text(face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 12,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 12,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(size = 12),
+    axis.text.y = ggplot2::element_text(size = 12)
+  )
+
+# Tabela agrupada por dia para sumarizar o total de lucro quando a receita e o
+# orcamento sao em US$
+imdb %>%
+  dplyr::mutate(
+    dia = lubridate::day(data_lancamento)
+  ) %>%
+  dplyr::group_by(dia) %>%
+  dplyr::filter(moeda_receita == 'US$' & moeda_orcamento == 'US$') %>%
+  dplyr::summarise(
+    lucro_por_dia = sum(lucro, na.rm = TRUE)
+  ) %>%
+  dplyr::select(dia, lucro_por_dia)
+
+# Nuvem de palavras com o totalde lucro por mes, onde a label são os meses.
+imdb %>%
+  dplyr::mutate(
+    mes = lubridate::month(data_lancamento,
+                           label = TRUE,
+                           abbr = FALSE),
+    mes = stringr::str_to_title(mes)
+  ) %>%
+  dplyr::group_by(mes) %>%
+  dplyr::filter(moeda_receita == 'US$' & moeda_orcamento == 'US$') %>%
+  dplyr::summarise(
+    lucro_por_dia = sum(lucro, na.rm = TRUE)
+  ) %>%
+  dplyr::mutate(
+    angle = 90 * sample(c(0, 1), dplyr::n(), replace = TRUE, prob = c(60, 40))
+  ) %>%
+  dplyr::filter(!is.na(mes)) %>%
+  ggplot2::ggplot(ggplot2::aes(label = mes,
+                               size = lucro_por_dia,
+                               angle = angle,
+                               color = lucro_por_dia)
+  ) +
+  ggwordcloud::geom_text_wordcloud_area(
+    shape = 'square',
+    seed = 100,
+    area_corr_power = 1/0.5
+  ) +
+  ggplot2::scale_size_area(max_size = 18) +
+  ggplot2::scale_color_gradient(low = '#FFA07A', high = '#FF0000') +
+  ggplot2::theme_bw()
 
 # -------------------------------------------------------------------------
 
@@ -113,8 +244,6 @@ imdb %>%
 imdb_pessoas %>%
   dplyr::filter(nome == "Christopher Nolan") %>%
   dplyr::mutate(
-    data_nascimento = lubridate::as_date(data_nascimento),
-    data_falecimento = lubridate::as_date(data_falecimento),
     idade = lubridate::as.period(Sys.Date() - data_nascimento),
     idade = idade / lubridate::years(1)
   ) %>%
@@ -182,7 +311,6 @@ imdb %>%
 
 imdb %>%
   dplyr::mutate(
-    data_lancamento = lubridate::as_date(data_lancamento),
     dia_lancamento = lubridate::day(data_lancamento),
     dia_semana_lancamento = lubridate::wday(data_lancamento, label = TRUE)
   ) %>%
@@ -192,7 +320,6 @@ imdb %>%
 imdb  %>%
   dplyr::filter(titulo == "Interstellar") %>%
   dplyr::mutate(
-    data_lancamento = lubridate::as_date(data_lancamento),
     meu_aniversario = lubridate::as_date("1989-04-12"),
     idade_dia_lancamento = lubridate::as.period(data_lancamento - meu_aniversario),
     idade_dia_lancamento = idade_dia_lancamento / lubridate::years(1)
@@ -233,7 +360,6 @@ imdb_avaliacoes %>%
   ) +
   ggplot2::labs(
     title = "Notas por faixa etária",
-    subtitle = "Notas médias obtidas do conjunto de dados IMDB avaliações",
     x = "Faixa Etária",
     y = "Nota Média",
     caption = "Fonte: IMDB Avaliações"
@@ -245,20 +371,17 @@ imdb_avaliacoes %>%
   ggplot2::theme_bw() +
   ggplot2::theme(
     plot.title = ggplot2::element_text(
-      size = 26,
+      size = 22,
       face = "bold"),
-    plot.subtitle = ggplot2::element_text(
-      size = 18,
-      face = "italic"),
     plot.caption = ggplot2::element_text(face = "italic"),
     axis.title.x = ggplot2::element_text(
-      size = 14,
+      size = 12,
       face = "bold"),
     axis.title.y = ggplot2::element_text(
-      size = 14,
+      size = 12,
       face = "bold"),
-    axis.text.x = ggplot2::element_text(size = 13),
-    axis.text.y = ggplot2::element_text(size = 13)
+    axis.text.x = ggplot2::element_text(size = 12),
+    axis.text.y = ggplot2::element_text(size = 12)
   )
 
 
