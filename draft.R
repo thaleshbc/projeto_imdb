@@ -193,6 +193,8 @@ imdb %>%
   dplyr::arrange(desc(n)) %>%
   head(50)
 
+sf_world <- giscoR::gisco_get_countries()
+
 qte_filmes_pais <- imdb %>%
   tidyr::separate(
     col = pais,
@@ -266,6 +268,81 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
 #   expand = TRUE
 # ) +
 
+sf_europe <- giscoR::gisco_get_countries(region = 'Europe')
+
+qte_filmes_europe <- imdb %>%
+  tidyr::separate(
+    col = pais,
+    into = c("pais", "pais_2", "pais_3", "pais_4"),
+    sep = ","
+  ) %>%
+  dplyr::mutate(
+    pais_2 = NULL,
+    pais_3 = NULL,
+    pais_4 = NULL
+  ) %>%
+  dplyr::mutate(
+    pais = dplyr::case_when(
+      pais == "USA" ~ "United States",
+      pais == "UK" ~ "United Kingdom",
+      pais == "Tanzania" ~ "United Republic of Tanzania",
+      pais == "West Germany" ~ "Germany",
+      pais == "East Germany" ~ "Germany",
+      pais == "Federal Republic of Yugoslavia" ~ "Yugoslavia",
+      pais == "Soviet Union" ~ "Russian Federation",
+      pais == "Russia" ~ "Russian Federation",
+      pais == "The Democratic Republic Of Congo" ~ "Democratic Republic of The Congo",
+      pais == "Korea" ~ "South Korea",
+      pais == "Serbia and Montenegro" ~ "Montenegro",
+      pais == "Côte d'Ivoire" ~ "Côte D’Ivoire",
+      pais == "Isle Of Man" ~ "Isle of Man",
+      pais == "North Vietnam" ~ "Vietnam",
+      pais == "Myanmar" ~ "Myanmar/Burma",
+      pais == "Republic of North Macedonia" ~ "North Macedonia",
+      pais == "Czechoslovakia" ~ "Czechia",
+      pais == "Czech Republic" ~ "Czechia",
+      pais == pais ~ pais
+    )
+  ) %>%
+  dplyr::rename(NAME_ENGL = pais) %>%
+  dplyr::count(NAME_ENGL) %>%
+  dplyr::full_join(sf_europe) %>%
+  dplyr::rename(
+    pais = NAME_ENGL,
+    qte_filmes = n
+  ) %>%
+  dplyr::mutate(
+    qte_filmes = dplyr::coalesce(qte_filmes, 0)
+  ) %>%
+  dplyr::filter(!is.na(pais)) %>%
+  dplyr::filter(pais != "Yugoslavia") %>%
+  dplyr::filter(!is.na(FID)) %>%
+  dplyr::arrange(desc(qte_filmes))
+
+ggplot2::ggplot(qte_filmes_europe, ggplot2::aes(fill = qte_filmes)) +
+  ggplot2::geom_sf(ggplot2::aes(geometry = geometry)) +
+  ggplot2::theme_bw() +
+  ggplot2::scale_fill_gradient(
+    low = '#FFD700',
+    high = '#8B0000'
+  ) +
+  ggplot2::labs(
+    title = "Países com mais filmes na Europa",
+    caption = "Fonte: IMDB",
+    fill = "Quantidade \nFilmes"
+  ) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 22,
+      face = "bold"),
+    plot.caption = ggplot2::element_text(face = "italic")
+  ) +
+  ggplot2::coord_sf(
+    xlim = c(-30, 70),
+    ylim = c(30, 85),
+    expand = TRUE
+  )
+#gghighlight::gghighlight(qte_filmes < 30000)
 
 
 # -------------------------------------------------------------------------
