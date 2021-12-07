@@ -357,7 +357,8 @@ imdb %>%
 imdb %>%
   dplyr::count(moeda_orcamento) %>%
   dplyr::filter(!is.na(moeda_orcamento)) %>%
-  dplyr::arrange(desc(n))
+  dplyr::arrange(desc(n)) %>%
+  View()
 
 
 imdb %>%

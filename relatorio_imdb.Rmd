@@ -407,17 +407,42 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
 
 ## 3. Liste todas as moedas que aparecem nas colunas `orcamento` e `receita` da base `imdb_completa`.
 
+Como poderemos ver abaixo, o dolar americano domina como sendo a principal moeda dos orçamentos dos filmes contidos na base estudada.
+
 ```{r, echo=FALSE, warning=FALSE}
 imdb %>%
   dplyr::count(moeda_orcamento) %>%
   dplyr::filter(!is.na(moeda_orcamento)) %>%
-  dplyr::arrange(desc(n))
-
-imdb %>%
-  dplyr::count(moeda_receita) %>%
-  dplyr::filter(!is.na(moeda_receita)) %>%
-  dplyr::arrange(desc(n))
+  dplyr::rename(quantidade = n) %>% 
+  dplyr::arrange(desc(quantidade)) %>% 
+  dplyr::mutate(
+    angle = 90 * sample(c(0, 1), dplyr::n(), replace = TRUE, prob = c(60, 40))
+  ) %>%
+  ggplot2::ggplot(ggplot2::aes(label = moeda_orcamento,
+                               size = quantidade,
+                               angle = angle,
+                               color = quantidade)
+  ) +
+  ggwordcloud::geom_text_wordcloud_area(
+    shape = 'square',
+    seed = 100,
+    area_corr_power = 1/1
+  ) +
+  ggplot2::scale_size_area(max_size = 70) +
+  ggplot2::scale_color_gradient(
+    low = '#0000FF', 
+    high = '#FF0000') +
+  ggplot2::theme_bw()
 
 ```
 
+E também como sendo praticamente a moeda majoritária qunado se trata de receita dos filmes.
+
+```{r, echo=FALSE, warning=FALSE}
+imdb %>%
+  dplyr::count(moeda_receita) %>%
+  dplyr::filter(!is.na(moeda_receita)) %>%
+  dplyr::arrange(desc(n)) %>% 
+  knitr::kable()
+```
 
