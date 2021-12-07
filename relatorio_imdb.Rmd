@@ -53,8 +53,8 @@ imdb <- imdb %>%
     into = c("moeda_orcamento", "valor_orcamento"),
     sep = " ") %>%
   dplyr::mutate(
-    moeda_receita = dplyr::if_else(moeda_receita == "$", "US$", moeda_receita),
-    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "US$", moeda_orcamento),
+    moeda_receita = dplyr::if_else(moeda_receita == "$", "USD", moeda_receita),
+    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "USD", moeda_orcamento),
     valor_receita = as.numeric(valor_receita),
     valor_orcamento = as.numeric(valor_orcamento),
     lucro = valor_receita - valor_orcamento,
@@ -200,7 +200,7 @@ ggplot2::ggplot(
 
 ```
 
-Já que estamos visualizando quantos filmes por mês e por dia foram lançados, vamos aproveitar e verificar qaunto foi o total de lucro agrupando por mês os dados. Para este caso iremos utilizar filtrar apenas os dados onde a moeda da receita e do orçamento são dolares (US$).
+Já que estamos visualizando quantos filmes por mês e por dia foram lançados, vamos aproveitar e verificar qaunto foi o total de lucro agrupando por mês os dados. Para este caso iremos utilizar filtrar apenas os dados onde a moeda da receita e do orçamento são dolares (USD).
 
 ```{r, echo=FALSE}
 
@@ -212,7 +212,7 @@ imdb %>%
     Mes = stringr::str_to_title(Mes)
   ) %>%
   dplyr::group_by(Mes) %>% 
-  dplyr::filter(moeda_receita == 'US$' & moeda_orcamento == 'US$') %>% 
+  dplyr::filter(moeda_receita == 'USD' & moeda_orcamento == 'USD') %>% 
   dplyr::summarise(
     Lucro_por_mes = sum(lucro, na.rm = TRUE)
   ) %>% 
@@ -234,7 +234,7 @@ imdb %>%
     mes = stringr::str_to_title(mes)
   ) %>%
   dplyr::group_by(mes) %>%
-  dplyr::filter(moeda_receita == 'US$' & moeda_orcamento == 'US$') %>%
+  dplyr::filter(moeda_receita == 'USD' & moeda_orcamento == 'USD') %>%
   dplyr::summarise(
     lucro_por_dia = sum(lucro, na.rm = TRUE)
   ) %>%
@@ -408,7 +408,15 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
 ## 3. Liste todas as moedas que aparecem nas colunas `orcamento` e `receita` da base `imdb_completa`.
 
 ```{r, echo=FALSE, warning=FALSE}
+imdb %>%
+  dplyr::count(moeda_orcamento) %>%
+  dplyr::filter(!is.na(moeda_orcamento)) %>%
+  dplyr::arrange(desc(n))
 
+imdb %>%
+  dplyr::count(moeda_receita) %>%
+  dplyr::filter(!is.na(moeda_receita)) %>%
+  dplyr::arrange(desc(n))
 
 ```
 

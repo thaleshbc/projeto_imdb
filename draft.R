@@ -22,8 +22,8 @@ imdb <- imdb %>%
     into = c("moeda_orcamento", "valor_orcamento"),
     sep = " ") %>%
   dplyr::mutate(
-    moeda_receita = dplyr::if_else(moeda_receita == "$", "US$", moeda_receita),
-    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "US$", moeda_orcamento),
+    moeda_receita = dplyr::if_else(moeda_receita == "$", "USD", moeda_receita),
+    moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "USD", moeda_orcamento),
     valor_receita = as.numeric(valor_receita),
     valor_orcamento = as.numeric(valor_orcamento),
     lucro = valor_receita - valor_orcamento,
@@ -141,13 +141,13 @@ imdb %>%
   )
 
 # Tabela agrupada por dia para sumarizar o total de lucro quando a receita e o
-# orcamento sao em US$
+# orcamento sao em USD
 imdb %>%
   dplyr::mutate(
     dia = lubridate::day(data_lancamento)
   ) %>%
   dplyr::group_by(dia) %>%
-  dplyr::filter(moeda_receita == 'US$' & moeda_orcamento == 'US$') %>%
+  dplyr::filter(moeda_receita == 'USD' & moeda_orcamento == 'USD') %>%
   dplyr::summarise(
     lucro_por_dia = sum(lucro, na.rm = TRUE)
   ) %>%
@@ -162,7 +162,7 @@ imdb %>%
     mes = stringr::str_to_title(mes)
   ) %>%
   dplyr::group_by(mes) %>%
-  dplyr::filter(moeda_receita == 'US$' & moeda_orcamento == 'US$') %>%
+  dplyr::filter(moeda_receita == 'USD' & moeda_orcamento == 'USD') %>%
   dplyr::summarise(
     lucro_por_dia = sum(lucro, na.rm = TRUE)
   ) %>%
@@ -355,11 +355,20 @@ imdb %>%
   dplyr::distinct(moeda_orcamento)
 
 imdb %>%
+  dplyr::count(moeda_orcamento) %>%
+  dplyr::filter(!is.na(moeda_orcamento)) %>%
+  dplyr::arrange(desc(n))
+
+
+imdb %>%
   dplyr::select(moeda_receita) %>%
   dplyr::filter(!is.na(moeda_receita)) %>%
   dplyr::distinct(moeda_receita)
 
-
+imdb %>%
+  dplyr::count(moeda_receita) %>%
+  dplyr::filter(!is.na(moeda_receita)) %>%
+  dplyr::arrange(desc(n))
 
 # -------------------------------------------------------------------------
 
@@ -367,7 +376,7 @@ imdb %>%
 
 imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
-  dplyr::filter(moeda_receita == "US$" & moeda_orcamento == "US$") %>%
+  dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
   dplyr::select(genero, lucro) %>%
   dplyr::arrange(desc(lucro))
 
@@ -417,7 +426,7 @@ imdb %>%
 
 imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
-  dplyr::filter(moeda_receita == "US$" & moeda_orcamento == "US$") %>%
+  dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
   dplyr::filter(direcao == "Christopher Nolan") %>%
   dplyr::group_by(direcao) %>%
   dplyr::summarise(
@@ -440,7 +449,7 @@ imdb_avaliacoes %>%
 
 tmp <- imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
-  dplyr::filter(moeda_receita == "US$" & moeda_orcamento == "US$") %>%
+  dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
   dplyr::arrange(desc(lucro))
 
 tmp %>%
