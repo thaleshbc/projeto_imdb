@@ -71,9 +71,9 @@ imdb_pessoas <- imdb_pessoas %>%
 
 ## 1. Qual o mês do ano com o maior número de filmes? E o dia do ano?
 
-Primeiro vamos ver uma tabela com a quantidade de filmes lançados por mês.
+Vamos observar um gráfico treemap com a quantidade de filmes lançados por mês. Dessa forma podemos ver qual o mês tem a maior e menor lançamento de filmes.
 
-```{r, echo=FALSE, results='asis'}
+```{r, include=FALSE, results='asis'}
 # Quantidade de filmes por mês
 imdb %>%
   dplyr::mutate(
@@ -86,9 +86,6 @@ imdb %>%
   dplyr::rename(Quantidade = n) %>% 
   knitr::kable()
 ```
-
-Vamos visualizar através de um gráfico, para uma melhor comparação, qual o mês com maior número de filmes.
-
 ```{r, echo=FALSE, fig.align='center'}
 imdb %>%
   dplyr::mutate(
@@ -112,21 +109,26 @@ imdb %>%
   ) +
   ggplot2::labs(
     title = 'Quantidade de filmes lançados por mês',
+    subtitle = "Considerando todos os anos do conjunto de dados",
     caption = 'Fonte: IMDB',
   ) +
   ggplot2::theme(
     plot.title = ggplot2::element_text(
-      size = 22,
+      size = 16,
       face = "bold"),
-    plot.caption = ggplot2::element_text(face = "italic"),
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
     legend.position = 'none'
   ) +
   ggplot2::scale_fill_viridis_c(alpha = 0.2, option = 'D')
 ```
 
-Em seguida temos o dia do mes com mais filmes lançados.
+Em seguida temos o dia do mes com mais filmes lançados. Vamos observar o gráfico para ver o comportamento dos lançamentos por dia do mês.
 
-```{r, echo=FALSE, results='asis'}
+```{r, include=FALSE, results='asis'}
 # Quantidade de filmes por dia
 imdb %>%
   dplyr::mutate(
@@ -138,9 +140,6 @@ imdb %>%
   dplyr::rename(Quantidade = n) %>% 
   knitr::kable()
 ```
-
-E uma visualização para ver como se comportou os lançamentos dos filmes em relação aos dias do mês.
-
 ```{r, echo=FALSE, fig.align='center'}
 
 g <- imdb %>%
@@ -179,51 +178,96 @@ ggplot2::ggplot(
   ggplot2::theme_bw() +
   ggplot2::labs(
     title = 'Quantidade de filmes lançados por dia',
+    subtitle = "Considerando todos os meses do conjunto de dados",
     x = 'Dia',
     y = 'Quantidade',
     caption = 'Fonte: IMDB'
   ) +
   ggplot2::theme(
     plot.title = ggplot2::element_text(
-      size = 22,
+      size = 16,
       face = "bold"),
-    plot.caption = ggplot2::element_text(face = "italic"),
-    axis.title.x = ggplot2::element_text(
+    plot.subtitle = ggplot2::element_text(
       size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 11,
       face = "bold"),
     axis.title.y = ggplot2::element_text(
-      size = 12,
+      size = 11,
       face = "bold"),
-    axis.text.x = ggplot2::element_text(size = 12),
-    axis.text.y = ggplot2::element_text(size = 12)
-  ) 
+    axis.text.x = ggplot2::element_text(
+      size = 10),
+    axis.text.y = ggplot2::element_text(
+      size = 10),
+    panel.grid = ggplot2::element_blank()
+  ) +
+  ggplot2::scale_x_continuous(
+    breaks = c(1:31)
+  )
 
 ```
 
 Já que estamos visualizando quantos filmes por mês e por dia foram lançados, vamos aproveitar e verificar qaunto foi o total de lucro agrupando por mês os dados. Para este caso iremos utilizar filtrar apenas os dados onde a moeda da receita e do orçamento são dolares (USD).
 
 ```{r, echo=FALSE}
-
 imdb %>% 
   dplyr::mutate(
-    Mes = lubridate::month(data_lancamento, 
-                           label = TRUE, 
-                           abbr = FALSE),
-    Mes = stringr::str_to_title(Mes)
+    mes = lubridate::month(data_lancamento,
+                           label = TRUE)
   ) %>%
-  dplyr::group_by(Mes) %>% 
+  dplyr::group_by(mes) %>% 
   dplyr::filter(moeda_receita == 'USD' & moeda_orcamento == 'USD') %>% 
   dplyr::summarise(
-    Lucro_por_mes = sum(lucro, na.rm = TRUE)
+    lucro_por_mes = sum(lucro, na.rm = TRUE)
   ) %>% 
-  dplyr::select(Mes, Lucro_por_mes) %>% 
-  dplyr::filter(!is.na(Mes)) %>% 
-  dplyr::arrange(desc(Lucro_por_mes)) %>% 
-  knitr::kable()
+  dplyr::select(mes, lucro_por_mes) %>% 
+  dplyr::filter(!is.na(mes)) %>% 
+  ggplot2::ggplot(ggplot2::aes(x = mes, y = lucro_por_mes)) +
+  ggplot2::geom_col(fill = "#4B0082") +
+  ggplot2::geom_text(ggplot2::aes(
+    label = paste0(round(lucro_por_mes/1000000000, 1), " B")),
+    color = "#FFFFFF",
+    vjust = 1.5) +
+  ggplot2::theme_bw() +
+  ggplot2::labs(
+    title = "Lucro por mes do ano",
+    subtitle = "Considerando todos os anos do conjunto de dados",
+    x = "Mês",
+    y = "Lucro Total (Bilhôes USD)",
+    caption = "Fonte IMDB"
+  ) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 16,
+      face = "bold"),
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(
+      size = 10),
+    axis.text.y = ggplot2::element_text(
+      size = 10)
+  ) +
+  ggplot2::scale_y_continuous(
+    breaks = seq(0, 40000000000, 10000000000),
+     labels = c("0", "10", "20", "30", "40")
+  ) 
+
 
 ```
 
-Podemos ver a nuvens de palavras com os meses que mais e menos lucrativos. Em azul os meses com menores lucros e em vermelho aqueles que tiveram bons lucros.
+Podemos ver uma nuvens de palavras com os meses que mais e menos lucrativos. Em azul e com o tamanho das letras menor os meses com menores lucros e em vermelho e com a fonte de tamanho maior aqueles que tiveram bons lucros. Sendo uma atividade interessante comparar com o gráfico de barras acima e ver se o tamanho e avcor na nuvem de palavras está condizente com a informação anteriormente mostrada.
 
 ```{r, fig.align='center', echo=FALSE}
 imdb %>%
@@ -248,15 +292,32 @@ imdb %>%
                                color = lucro_por_dia)
   ) +
   ggwordcloud::geom_text_wordcloud_area(
-    shape = 'square',
+    shape = 'cardioid',
     seed = 100,
-    area_corr_power = 1/0.5
+    area_corr_power = 1/0.25
   ) +
-  ggplot2::scale_size_area(max_size = 18) +
+  ggplot2::scale_size_area(
+    max_size = 16
+  ) +
   ggplot2::scale_color_gradient(
     low = '#0000FF', 
     high = '#FF0000') +
-  ggplot2::theme_bw()
+  ggplot2::theme_bw() +
+  ggplot2::labs(
+    title = "Lucro por mes do ano",
+    subtitle = "Considerando todos os anos do conjunto de dados",
+    caption = "Fonte IMDB"
+  ) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 16,
+      face = "bold"),
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+  )
 ```
 
 ## 2. Qual o top 5 países com mais filmes na base?
@@ -335,13 +396,29 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
   ggplot2::labs(
     title = "Os 5 paises com mais filmes",
     caption = "Fonte: IMDB",
-    fill = "Quantidade \nFilmes"
+    x = "Longitude", 
+    y = "Latitude",
+    fill = "Quantidade \nde Filmes"
   ) +
   ggplot2::theme(
     plot.title = ggplot2::element_text(
-      size = 22,
+      size = 16,
       face = "bold"),
-    plot.caption = ggplot2::element_text(face = "italic")
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(
+      size = 10),
+    axis.text.y = ggplot2::element_text(
+      size = 10)
   ) +
   gghighlight::gghighlight(qte_filmes > 3500) 
 
@@ -362,15 +439,31 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
     high = '#8B0000'
   ) +
   ggplot2::labs(
-    title = "Os países europeus dentro dos 5 com mais filmes",
+    title = "Os países europeus dentro \ndos 5 com mais filmes",
+    x = "Longitude",
+    y = "Latitude",
     caption = "Fonte: IMDB",
-    fill = "Quantidade \nFilmes"
+    fill = "Quantidade \nde Filmes"
   ) +
-  ggplot2::theme(
+ ggplot2::theme(
     plot.title = ggplot2::element_text(
-      size = 22,
+      size = 16,
       face = "bold"),
-    plot.caption = ggplot2::element_text(face = "italic")
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(
+      size = 10),
+    axis.text.y = ggplot2::element_text(
+      size = 10)
   ) +
   gghighlight::gghighlight(qte_filmes > 3500 & qte_filmes < 8000) +
   ggplot2::coord_sf(
@@ -391,15 +484,32 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
     high = "#8B0000"
   ) +
   ggplot2::labs(
-    title = "Países com mais filmes (exceto EUA)",
+    title = "Países com mais filmes",
+    subtitle = "Excessão a Estados Unidos",
+    x = "Longitude",
+    y = "Latitude",
     caption = "Fonte: IMDB",
-    fill = "Quantidade \nFilmes"
+    fill = "Quantidade \nde Filmes"
   ) +
-  ggplot2::theme(
+ ggplot2::theme(
     plot.title = ggplot2::element_text(
-      size = 22,
+      size = 16,
       face = "bold"),
-    plot.caption = ggplot2::element_text(face = "italic")
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(
+      size = 10),
+    axis.text.y = ggplot2::element_text(
+      size = 10)
   ) +
   gghighlight::gghighlight(qte_filmes < 30000) 
 
@@ -407,9 +517,9 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
 
 ## 3. Liste todas as moedas que aparecem nas colunas `orcamento` e `receita` da base `imdb_completa`.
 
-Como poderemos ver abaixo, o dolar americano domina como sendo a principal moeda dos orçamentos dos filmes contidos na base estudada.
+Como poderemos ver abaixo, o dolar americano domina como sendo a principal moeda dos orçamentos dos filmes contidos na base estudada. Na nuvem de palavras conseguimos observar uma discrepância entro o dollar e outras moedas.
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, fig.align='center', warning=FALSE}
 imdb %>%
   dplyr::count(moeda_orcamento) %>%
   dplyr::filter(!is.na(moeda_orcamento)) %>%
@@ -428,10 +538,25 @@ imdb %>%
     seed = 100,
     area_corr_power = 1/1
   ) +
-  ggplot2::scale_size_area(max_size = 70) +
+  ggplot2::scale_size_area(max_size = 65) +
   ggplot2::scale_color_gradient(
     low = '#0000FF', 
     high = '#FF0000') +
+  ggplot2::labs(
+    title = "Moedas utilizadas",
+    subtitle = "Ocorrências no atributo orçamento",
+    caption = "Fonte IMDB"
+  ) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 16,
+      face = "bold"),
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+  ) +
   ggplot2::theme_bw()
 
 ```
