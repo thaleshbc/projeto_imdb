@@ -21,6 +21,11 @@ imdb <- imdb %>%
     col = orcamento,
     into = c("moeda_orcamento", "valor_orcamento"),
     sep = " ") %>%
+  tidyr::separate(
+    col = genero,
+    into = c("genero_1", "genero_2", "genero_3"),
+    sep = ","
+  ) %>%
   dplyr::mutate(
     moeda_receita = dplyr::if_else(moeda_receita == "$", "USD", moeda_receita),
     moeda_orcamento = dplyr::if_else(moeda_orcamento == "$", "USD", moeda_orcamento),
@@ -378,8 +383,12 @@ imdb %>%
 imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
   dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
-  dplyr::select(genero, lucro) %>%
+  dplyr::select(genero_1, genero_2, genero_3, lucro) %>%
   dplyr::arrange(desc(lucro))
+
+imdb %>%
+  dplyr::select(genero_3) %>%
+  dplyr::n_distinct()
 
 imdb %>%
   dplyr::select(genero, nota_imdb) %>%
@@ -389,7 +398,8 @@ imdb %>%
   ) %>%
   dplyr::arrange(desc(nota_media))
 
-
+  ) +
+  ggplot2::coord_flip()
 
 # -------------------------------------------------------------------------
 
