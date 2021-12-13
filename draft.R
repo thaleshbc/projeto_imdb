@@ -383,23 +383,25 @@ imdb %>%
 imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
   dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
-  dplyr::select(genero_1, genero_2, genero_3, lucro) %>%
-  dplyr::arrange(desc(lucro))
+  dplyr::select(genero_1, lucro) %>%
+  dplyr::group_by(genero_1) %>%
+  dplyr::summarise(
+    total_lucro = sum(lucro, na.rm = TRUE)
+  ) %>%
+  dplyr::arrange(desc(total_lucro))
+
 
 imdb %>%
-  dplyr::select(genero_3) %>%
-  dplyr::n_distinct()
-
-imdb %>%
-  dplyr::select(genero, nota_imdb) %>%
-  dplyr::group_by(genero) %>%
+  dplyr::select(genero_1, nota_imdb) %>%
+  dplyr::filter(!is.na(genero_1)) %>%
+  dplyr::group_by(genero_1) %>%
   dplyr::summarise(
     nota_media = mean(nota_imdb, na.rm = TRUE)
   ) %>%
   dplyr::arrange(desc(nota_media))
 
-  ) +
-  ggplot2::coord_flip()
+
+
 
 # -------------------------------------------------------------------------
 
