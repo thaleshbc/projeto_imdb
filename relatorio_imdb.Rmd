@@ -206,8 +206,7 @@ ggplot2::ggplot(
     axis.text.x = ggplot2::element_text(
       size = 10),
     axis.text.y = ggplot2::element_text(
-      size = 10),
-    panel.grid = ggplot2::element_blank()
+      size = 10)
   ) +
   ggplot2::scale_x_continuous(
     breaks = c(1:31)
@@ -387,9 +386,9 @@ qte_filmes_pais %>%
   dplyr::rename(
     Pais = pais,
     Qte_Filmes = qte_filmes
-  ) %>% 
-  knitr::kable()
+  ) 
 
+qte_filmes_pais
 ```
 
 Vamos destacar no mapa mundi os 5 países com mais filmes na base estudada.
@@ -578,8 +577,7 @@ imdb %>%
   ) %>% 
   dplyr::mutate(
     Porcentagem = Qte_Filmes / sum(Qte_Filmes) * 100
-  ) %>% 
-  knitr::kable()
+  )
 ```
 
 ## 4. Considerando apenas orçamentos e receitas em dólar ($), qual o gênero com maior lucro? E com maior nota média?
@@ -798,7 +796,7 @@ ggplot2::ggplot(g1, ggplot2::aes(x = total_orcamento, y = total_receita, color =
       size = 10),
     axis.text.y = ggplot2::element_text(
       size = 10),
-    legend.position = "none"
+    legend.position = "none",
   ) +
   ggplot2::scale_y_continuous(
      breaks = seq(0, 35e+10, 5e+10),
