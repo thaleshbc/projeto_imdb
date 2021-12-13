@@ -217,7 +217,7 @@ ggplot2::ggplot(
 
 Já que estamos visualizando quantos filmes por mês e por dia foram lançados, vamos aproveitar e verificar qaunto foi o total de lucro agrupando por mês os dados. Para este caso iremos utilizar filtrar apenas os dados onde a moeda da receita e do orçamento são dolares (USD).
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.align='center'}
 imdb %>% 
   dplyr::mutate(
     mes = lubridate::month(data_lancamento,
@@ -329,7 +329,7 @@ imdb %>%
 
 Podemos ver através de uma tabela quais são os 5 países com mais filmes no conjunto de dados do IMDB.
 
-```{r, echo=FALSE, fig.align='center', warning=FALSE}
+```{r, echo=FALSE, fig.align='center',message=FALSE, warning=FALSE}
 
 sf_world <- giscoR::gisco_get_countries()
 
@@ -430,7 +430,6 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
       size = 10)
   ) +
   gghighlight::gghighlight(qte_filmes > 3500) 
-
 ```
 
 Os países com mais filmes são Estados Unidos, India, Reino Unido, França e Itália. Abaixo, destacaremos no mapa os países europeus que estão no top5 filmes lançados.
@@ -588,7 +587,7 @@ imdb %>%
 Antes de avaliar o gênero com o maior lucro e com a maior nota média, vamos visualizar o comportamento dos gêneros relacionados aos filmes. A coluna gênero possui, em alguns filmes, mais de um gênero relacionado. Dessa forma separamos a coluna em três outras, com os três primeiros gêneros listados. Se algum filme possuir mais do que três gêneros serão considerados para análise até o terceiro listado. Vale a pena ressaltar que estou, também, considerando que o gênero 1 é o principal (primário), o gênero 2 e 3 como apenas complemento, ou seja secundário e terciário.
 Abaixo nós conseguimos ver como se comporta o fluxo dos gêneros dos filmes de acordo com sua posição, se ele é o principal ou um dos auxiliares.
 
-```{r, echo=FALSE, fig.align='center', warning=FALSE}
+```{r, echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
 tmp <- imdb %>% 
   dplyr::select(
     genero_1, 
@@ -611,7 +610,7 @@ tmp <- imdb %>%
     genero
   ) %>% 
   dplyr::summarise(
-    quantidade = n()
+    quantidade = dplyr::n()
   )
 
 links <- data.frame(
@@ -628,7 +627,7 @@ nodes <- data.frame(
 links$IDsource <- match(links$source, nodes$name)-1 
 links$IDtarget <- match(links$target, nodes$name)-1
   
-sankeyNetwork(Links = links, Nodes = nodes,
+networkD3::sankeyNetwork(Links = links, Nodes = nodes,
               Source = "IDsource", Target = "IDtarget",
               Value = "value", NodeID = "name", 
               sinksRight=FALSE, fontSize = 12)
@@ -747,7 +746,7 @@ imdb %>%
   
 ```
 Com essa segunda visualização podemos observar que ter mais filmes feitos em um determinado gênero não é sinônimo de que esse gênero tenha um maior lucro no todo. O gênero drama possui por volta de 26 mil filmes feitos, sendo o gênero com mais observações. Porém o gênero de ação que é o terceiro com mais filmes feitos, fica no topo isolado quando se trata do lucro total.
-Logo abaixo mostramos a relação entre orçamento, receita e lucro dos filmes com orçamento e ereceita em dollares.
+Logo abaixo mostramos a relação entre orçamento, receita e lucro dos filmes com orçamento e receita em dollares. Vamos avaliar se os filmes com maiores orçamentos são os com maiores lucros.
 
 ```{r, echo=FALSE, fig.align='center', warning=FALSE}
 g1 <- imdb %>%
@@ -814,4 +813,151 @@ ggplot2::ggplot(g1, ggplot2::aes(x = total_orcamento, y = total_receita, color =
     ggplot2::aes(label = paste(genero_1, paste(round(total_lucro/1000000000, 1), " B"), sep = "\n")),
     size = 2.5
   )
+```
+
+## 5. Dentre os filmes na base `imdb_completa`, escolha o seu favorito. Então faça os itens a seguir:
+
+O filme que mais gosto dentro da base do IMDB é *Interstellar*. A partir dessa informação iremos responder as perguntas a seguir.
+
+### a) Quem dirigiu o filme? Faça uma ficha dessa pessoa: idade (hoje em dia ou data de falecimento), onde nasceu, quantos filmes já dirigiu, qual o lucro médio dos filmes que dirigiu (considerando apenas valores em dólar) e outras informações que achar interessante (base `imdb_pessoas`).
+
+Abaixo temo o diretor do filme.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb %>%
+  dplyr::filter(titulo == "Interstellar") %>%
+  dplyr::select(direcao) %>% 
+  dplyr::rename(Diretor = direcao)
+```
+
+Aqui temos a data de nascimento e a sua idade atual.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb_pessoas %>%
+  dplyr::filter(nome == "Christopher Nolan") %>%
+  dplyr::mutate(
+    idade = lubridate::as.period(Sys.Date() - data_nascimento),
+    idade = round(idade / lubridate::years(1), 2)
+  ) %>%
+  dplyr::select(nome,data_nascimento, idade) %>% 
+  dplyr::rename(
+    Diretor = nome,
+    'Data de Nascimento' = data_nascimento,
+    Idade = idade
+  )
+```
+
+Logo em seguida o local de nascimento de Christopher Nolan.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb_pessoas %>%
+  dplyr::filter(nome == "Christopher Nolan") %>%
+  dplyr::select(local_nascimento) %>% 
+  tidyr::separate(
+    col = local_nascimento,
+    into = c("Cidade", "País"),
+    sep = ","
+  )
+```
+
+Na sequência a quantidade de filmes feitos por Christopher Nolan.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb %>%
+  dplyr::count(direcao) %>%
+  dplyr::filter(direcao == "Christopher Nolan") %>% 
+  dplyr::rename(
+    Diretor = direcao,
+    'Quantidade de Filmes' = n
+  )
+```
+
+No gráfico abaixo será mostrado o lucro por filme, ordenado por ano e com o valor médio do lucro dos filmes de Christopher Nolan.
+
+```{r, echo=FALSE, fig.align='center', message=FALSE, warning=FALSE}
+tmp <- imdb %>%
+  dplyr::filter(direcao == "Christopher Nolan") %>%
+  dplyr::filter(!is.na(lucro)) %>%
+  dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
+  dplyr::mutate(
+    status = dplyr::if_else(lucro > 0, "positivo", "negativo"),
+    titulo = dplyr::case_when(
+      titulo == "Il cavaliere oscuro - Il ritorno" ~ "The Dark Knight Rises",
+      titulo == "Il cavaliere oscuro" ~ "The Dark Knight",
+      titulo == titulo ~ titulo
+    )
+  ) %>% 
+  dplyr::select(ano, titulo, lucro, status) %>%
+  dplyr::arrange(desc(ano)) 
+
+ggplot2::ggplot(
+  tmp, 
+  ggplot2::aes(x = forcats::fct_reorder(titulo, ano), y = lucro)
+) +
+  ggplot2::geom_bar(
+    stat = "identity", 
+    alpha = 0.7, 
+    ggplot2::aes(fill = status)
+  ) +
+  ggplot2::geom_hline(
+    yintercept = mean(tmp$lucro), 
+    color = "#000000",
+    linetype = "longdash"
+  ) +
+  ggplot2::geom_text(
+    x = tmp$titulo[10], 
+    y = mean(tmp$lucro) - 5e+07, 
+    label = "USD 323.706.161",
+    color = "#000000",
+    size = 3.5,
+  ) +
+  ggplot2::geom_text(
+    x = tmp$titulo[10], 
+    y = mean(tmp$lucro) + 5e+07, 
+    label = "Média do lucro dos filmes",
+    color = "#000000",
+    size = 3.5,
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::labs(
+    title = "Lucro dos filmes de Christopher Nolan",
+    subtitle = "Ordenado por ano de lançamento",
+    x = "Nome do Filme",
+    y = "Lucro (Milhôes USD)",
+    caption = "Fonte IMDB"
+  ) +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 16,
+      face = "bold"),
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(
+      size = 10,
+      angle = 90),
+    axis.text.y = ggplot2::element_text(
+      size = 10),
+    legend.position = "none"
+  ) + 
+  ggplot2::scale_fill_manual(values = c("positivo" = "blue", "negativo" = "red")) + 
+  ggplot2::scale_y_continuous(
+    breaks = seq(-2e+08, 10e+08, 2e+08),
+    labels = c("-200", "0", "200", "400", "600", "800", "1000")
+  )
+  
+```
+
+# b) Qual a posição desse filme no ranking de notas do IMDB? E no ranking de lucro (considerando apenas valores em dólar)?
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
 ```

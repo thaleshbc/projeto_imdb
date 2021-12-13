@@ -411,31 +411,56 @@ imdb %>%
   dplyr::filter(titulo == "Interstellar")
 
   # a) Quem dirigiu o filme? Faça uma ficha dessa pessoa: idade (hoje em dia ou data de falecimento), onde nasceu, quantos filmes já dirigiu, qual o lucro médio dos filmes que dirigiu (considerando apenas valores em dólar) e outras informações que achar interessante (base `imdb_pessoas`).
-
 imdb %>%
   dplyr::filter(titulo == "Interstellar") %>%
-  dplyr::select(direcao)
+  dplyr::select(direcao) %>%
+  dplyr::rename(Diretor = direcao)
 
 imdb_pessoas %>%
   dplyr::filter(nome == "Christopher Nolan") %>%
   dplyr::mutate(
     idade = lubridate::as.period(Sys.Date() - data_nascimento),
-    idade = idade / lubridate::years(1)
+    idade = round(idade / lubridate::years(1), 2)
   ) %>%
-  dplyr::select(idade)
+  dplyr::select(nome,data_nascimento, idade) %>%
+  dplyr::rename(
+    Diretor = nome,
+    'Data de Nascimento' = data_nascimento,
+    Idade = idade
+  )
 
-  imdb_pessoas %>%
+imdb_pessoas %>%
   dplyr::filter(nome == "Christopher Nolan") %>%
-  dplyr::select(local_nascimento)
+  dplyr::select(local_nascimento) %>%
+  tidyr::separate(
+    col = local_nascimento,
+    into = c("Cidade", "País"),
+    sep = ","
+  )
 
 imdb %>%
   dplyr::count(direcao) %>%
-  dplyr::filter(direcao == "Christopher Nolan")
+  dplyr::filter(direcao == "Christopher Nolan") %>%
+  dplyr::rename(
+    Diretor = direcao,
+    'Quantidade de Filmes' = n
+  )
 
 imdb %>%
   dplyr::filter(direcao == "Christopher Nolan") %>%
-  dplyr::select(ano, titulo) %>%
-  dplyr::arrange(desc(ano))
+  dplyr::filter(!is.na(lucro)) %>%
+  dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
+  dplyr::select(ano, titulo, lucro) %>%
+  dplyr::mutate(
+    lucro = format(lucro, big.mark = ".")
+  ) %>%
+  dplyr::arrange(desc(ano)) %>%
+  dplyr::rename(
+    Ano = ano,
+    'Título do Filme' = titulo,
+    Lucro = lucro
+  )
+
 
 imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
@@ -443,7 +468,11 @@ imdb %>%
   dplyr::filter(direcao == "Christopher Nolan") %>%
   dplyr::group_by(direcao) %>%
   dplyr::summarise(
-    media_lucro = mean(lucro, na.rm = TRUE)
+    media_lucro = format(mean(lucro, na.rm = TRUE), big.mark= ".")
+  ) %>%
+  dplyr::rename(
+    Diretor = direcao,
+    'Média de Lucro' = media_lucro
   )
 
   # b) Qual a posição desse filme no ranking de notas do IMDB? E no ranking de lucro (considerando apenas valores em dólar)?
