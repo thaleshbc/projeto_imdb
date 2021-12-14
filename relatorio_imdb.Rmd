@@ -1,9 +1,8 @@
 ---
 title: "Análise sobre o conjunto de dados do IMDB"
 author: "Thales Henrique Barros Cardoso"
-output:
-  html_document:
-    df_print: paged
+output: github_document
+
 ---
 
 # Análise dos dados do IMDB
@@ -268,7 +267,6 @@ imdb %>%
      labels = c("0", "10", "20", "30", "40")
   ) 
 
-
 ```
 
 Podemos ver uma nuvens de palavras com os meses que mais e menos lucrativos. Em azul e com o tamanho das letras menor os meses com menores lucros e em vermelho e com a fonte de tamanho maior aqueles que tiveram bons lucros. Sendo uma atividade interessante comparar com o gráfico de barras acima e ver se o tamanho e avcor na nuvem de palavras está condizente com a informação anteriormente mostrada.
@@ -387,8 +385,6 @@ qte_filmes_pais %>%
     Pais = pais,
     Qte_Filmes = qte_filmes
   ) 
-
-qte_filmes_pais
 ```
 
 Vamos destacar no mapa mundi os 5 países com mais filmes na base estudada.
@@ -520,7 +516,7 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
 
 ## 3. Liste todas as moedas que aparecem nas colunas `orcamento` e `receita` da base `imdb_completa`.
 
-Como poderemos ver abaixo, o dolar americano domina como sendo a principal moeda dos orçamentos dos filmes contidos na base estudada. Na nuvem de palavras conseguimos observar uma discrepância entro o dollar e outras moedas.
+Como poderemos ver abaixo, o dolar americano domina como sendo a principal moeda dos orçamentos dos filmes contidos na base estudada. Na nuvem de palavras conseguimos observar uma discrepância entro o dolar e outras moedas.
 
 ```{r, echo=FALSE, fig.align='center', warning=FALSE}
 imdb %>%
@@ -564,7 +560,7 @@ imdb %>%
 
 ```
 
-E também como sendo praticamente a moeda majoritária quando se trata de receita dos filmes. Na tabela abaixo podemos ver que o dollar representa 99,80% da receita dos filmes.
+E também como sendo praticamente a moeda majoritária quando se trata de receita dos filmes. Na tabela abaixo podemos ver que o dolar representa 99,80% da receita dos filmes.
 
 ```{r, echo=FALSE, warning=FALSE}
 imdb %>%
@@ -744,7 +740,7 @@ imdb %>%
   
 ```
 Com essa segunda visualização podemos observar que ter mais filmes feitos em um determinado gênero não é sinônimo de que esse gênero tenha um maior lucro no todo. O gênero drama possui por volta de 26 mil filmes feitos, sendo o gênero com mais observações. Porém o gênero de ação que é o terceiro com mais filmes feitos, fica no topo isolado quando se trata do lucro total.
-Logo abaixo mostramos a relação entre orçamento, receita e lucro dos filmes com orçamento e receita em dollares. Vamos avaliar se os filmes com maiores orçamentos são os com maiores lucros.
+Logo abaixo mostramos a relação entre orçamento, receita e lucro dos filmes com orçamento e receita em dolares. Vamos avaliar se os filmes com maiores orçamentos são os com maiores lucros.
 
 ```{r, echo=FALSE, fig.align='center', warning=FALSE}
 g1 <- imdb %>%
@@ -796,7 +792,7 @@ ggplot2::ggplot(g1, ggplot2::aes(x = total_orcamento, y = total_receita, color =
       size = 10),
     axis.text.y = ggplot2::element_text(
       size = 10),
-    legend.position = "none",
+    legend.position = 'none'
   ) +
   ggplot2::scale_y_continuous(
      breaks = seq(0, 35e+10, 5e+10),
@@ -806,6 +802,9 @@ ggplot2::ggplot(g1, ggplot2::aes(x = total_orcamento, y = total_receita, color =
      breaks = seq(0, 12e+10, 2e+10),
      labels = c("0", "20", "40", "60", "80", "100", "120")
   ) +
+  # ggplot2::scale_fill_discrete(name = "Lucro \nTotal") +
+  # ggplot2::scale_color_discrete(guide = 'none') +
+  # ggplot2::scale_alpha(guide = 'none') +
   ggrepel::geom_label_repel(
     data = subset(g1, total_lucro > 3000000000),
     ggplot2::aes(label = paste(genero_1, paste(round(total_lucro/1000000000, 1), " B"), sep = "\n")),
@@ -890,31 +889,24 @@ tmp <- imdb %>%
 
 ggplot2::ggplot(
   tmp, 
-  ggplot2::aes(x = forcats::fct_reorder(titulo, ano), y = lucro)
+  ggplot2::aes(x = forcats::fct_reorder(titulo, -ano), y = lucro)
 ) +
   ggplot2::geom_bar(
     stat = "identity", 
-    alpha = 0.7, 
     ggplot2::aes(fill = status)
   ) +
   ggplot2::geom_hline(
     yintercept = mean(tmp$lucro), 
     color = "#000000",
-    linetype = "longdash"
+    linetype = "longdash",
+    size = 1
   ) +
   ggplot2::geom_text(
     x = tmp$titulo[10], 
-    y = mean(tmp$lucro) - 5e+07, 
-    label = "USD 323.706.161",
+    y = mean(tmp$lucro) + 1.7e+08, 
+    label = "Média do lucro dos filmes \nUSD 323.706.161",
     color = "#000000",
-    size = 3.5,
-  ) +
-  ggplot2::geom_text(
-    x = tmp$titulo[10], 
-    y = mean(tmp$lucro) + 5e+07, 
-    label = "Média do lucro dos filmes",
-    color = "#000000",
-    size = 3.5,
+    size = 3.5
   ) +
   ggplot2::theme_bw() +
   ggplot2::labs(
@@ -940,8 +932,7 @@ ggplot2::ggplot(
       size = 11,
       face = "bold"),
     axis.text.x = ggplot2::element_text(
-      size = 10,
-      angle = 90),
+      size = 10),
     axis.text.y = ggplot2::element_text(
       size = 10),
     legend.position = "none"
@@ -950,12 +941,182 @@ ggplot2::ggplot(
   ggplot2::scale_y_continuous(
     breaks = seq(-2e+08, 10e+08, 2e+08),
     labels = c("-200", "0", "200", "400", "600", "800", "1000")
-  )
+  ) +
+  ggplot2::coord_flip()
   
 ```
 
-# b) Qual a posição desse filme no ranking de notas do IMDB? E no ranking de lucro (considerando apenas valores em dólar)?
+### b) Qual a posição desse filme no ranking de notas do IMDB? E no ranking de lucro (considerando apenas valores em dólar)?
+
+Para responder a posição do filme no ranking de notas do IMDB, vamos considerar a nota média como sendo a referência para essa análise dentro da base `imdb_avaliacoes`.
+Primeiro devemos saber qual o ID do filme para poder utilizar essa base com as notas.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb %>%
+  dplyr::filter(titulo == "Interstellar") %>%
+  dplyr::select(titulo, id_filme)
+```
+
+Podemos observar abaixo que pela nota média o filme Interstellar está na posição 680 no rank.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb_avaliacoes %>%
+  dplyr::arrange(desc(nota_media)) %>%
+  dplyr::mutate(
+    ranking_nota = 1:nrow(imdb_avaliacoes)
+  ) %>%
+  dplyr::filter(id_filme == "tt0816692") %>%
+  dplyr::select(ranking_nota, nota_media) %>% 
+  dplyr::rename(
+    'Rank Nota' = ranking_nota,
+    'Nota Média' = nota_media
+  )
+```
+
+Em relação a posição do filme no rank de maiores lucros obtido na moeda dolar, vemos abaixo que ele ficou na posição 133.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tmp <- imdb %>%
+  dplyr::filter(!is.na(lucro)) %>%
+  dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
+  dplyr::arrange(desc(lucro))
+
+tmp %>%
+  dplyr::mutate(
+    ranking_lucro = 1:nrow(tmp)
+  ) %>%
+  dplyr::filter(titulo == "Interstellar") %>%
+  dplyr::select(ranking_lucro, lucro) %>% 
+  dplyr::mutate(
+    lucro = format(lucro, big.mark = ".")
+  ) %>%
+  dplyr::rename(
+    'Rank Lucro' = ranking_lucro,
+    Lucro = lucro
+  )
+```
+
+### c) Em que dia esse filme foi lançado? E dia da semana? Algum outro filme foi lançado no mesmo dia? Quantos anos você tinha nesse dia?
+
+Vamo encontrar a data de lançamento e o dia da semana que foi lançado abaixo.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb %>%
+  dplyr::filter(titulo == "Interstellar") %>%
+  dplyr::mutate(
+    dia_semana_lancamento = lubridate::wday(data_lancamento, label = TRUE, abbr = FALSE)
+  ) %>%
+  dplyr::select(titulo, data_lancamento, dia_semana_lancamento) %>% 
+  dplyr::rename(
+    Filme = titulo,
+    'Data Lançamento' = data_lancamento,
+    'Dia da Semana' = dia_semana_lancamento
+  )
+```
+
+Agora na sequência veremos quais foram os filmes lançados no mesmo dia que Interstellar.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb %>%
+  dplyr::filter(data_lancamento == '2014-11-06') %>%
+  dplyr::select(titulo, data_lancamento) %>% 
+  dplyr::rename(
+    Filme = titulo,
+    'Data de Lançamento' = data_lancamento
+  ) 
+```
+
+Agora veremos a minha idade em anos quando Interstellar foi lançado.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb  %>%
+  dplyr::filter(titulo == "Interstellar") %>%
+  dplyr::mutate(
+    meu_aniversario = lubridate::as_date("1989-04-12"),
+    idade_dia_lancamento = lubridate::as.period(data_lancamento - meu_aniversario),
+    idade_dia_lancamento = idade_dia_lancamento / lubridate::years(1)
+  ) %>%
+  dplyr::select(titulo, data_lancamento, meu_aniversario, idade_dia_lancamento) %>% 
+  dplyr::rename(
+    Filme = titulo,
+    'Data Lançamento' = data_lancamento,
+    'Meu Nascimento' = meu_aniversario,
+    'Minha Idade no Lançamento do Filme' = idade_dia_lancamento
+  )
+```
+
+### d) Faça um gráfico representando a distribuição da nota atribuída a esse filme por idade (base `imdb_avaliacoes`).
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+imdb_avaliacoes %>%
+  dplyr::filter(id_filme == "tt0816692") %>%
+  dplyr::select(
+    nota_media_idade_0_18,
+    nota_media_idade_18_30,
+    nota_media_idade_30_45,
+    nota_media_idade_45_mais
+  ) %>%
+  dplyr::rename(
+    idade_0_18 = nota_media_idade_0_18,
+    idade_18_30 = nota_media_idade_18_30,
+    idade_30_45 = nota_media_idade_30_45,
+    idade_45_mais = nota_media_idade_45_mais
+  ) %>%
+  tidyr::pivot_longer(
+    cols = dplyr::starts_with("idade"),
+    names_to = "faixa_etaria",
+    values_to = "nota_media"
+  ) %>%
+  dplyr::select(faixa_etaria, nota_media) %>% 
+  ggplot2::ggplot(ggplot2::aes(x = faixa_etaria, y = nota_media)) +
+  ggplot2::geom_bar(
+    stat = "identity",
+    width = 0.5,
+    fill = "#6959CD") +
+  ggplot2::geom_text(
+    stat = "identity",
+    ggplot2::aes(label = nota_media),
+    vjust = 1.5,
+    color = "white",
+    size = 6,
+  ) +
+  ggplot2::labs(
+    title = "Notas por faixa etária",
+    x = "Faixa Etária",
+    y = "Nota Média",
+    caption = "Fonte: IMDB Avaliações"
+  ) +
+  ggplot2::scale_x_discrete(
+    breaks = c("idade_0_18", 
+               "idade_18_30", 
+               "idade_30_45", 
+               "idade_45_mais"),
+    labels = c("0 a 18", 
+               "18 a 30", 
+               "30 a 45", 
+               "45 +")
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 16,
+      face = "bold"),
+    plot.subtitle = ggplot2::element_text(
+      size = 12,
+      face = "italic"),
+    plot.caption = ggplot2::element_text(
+      face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 11,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(
+      size = 10),
+    axis.text.y = ggplot2::element_text(
+      size = 10),
+    legend.position = "none"
+  ) 
 
 ```

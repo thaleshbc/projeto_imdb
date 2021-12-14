@@ -487,7 +487,7 @@ imdb_avaliacoes %>%
     ranking_nota = 1:nrow(imdb_avaliacoes)
   ) %>%
   dplyr::filter(id_filme == "tt0816692") %>%
-  dplyr::select(ordem, nota_media)
+  dplyr::select(ranking_nota, nota_media)
 
 tmp <- imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
@@ -508,18 +508,22 @@ rm('tmp')
 imdb %>%
   dplyr::filter(titulo == "Interstellar") %>%
   dplyr::mutate(
-    dia_lancamento = lubridate::day(data_lancamento),
-    dia_semana_lancamento = lubridate::wday(data_lancamento, label = TRUE)
+    dia_semana_lancamento = lubridate::wday(data_lancamento, label = TRUE, abbr = FALSE)
   ) %>%
-  dplyr::select(titulo, dia_lancamento, dia_semana_lancamento)
+  dplyr::select(titulo, data_lancamento, dia_semana_lancamento) %>%
+  dplyr::rename(
+    Filme = titulo,
+    'Data Lançamento' = data_lancamento,
+    'Dia da Semana' = dia_semana_lancamento
+  )
 
 imdb %>%
-  dplyr::mutate(
-    dia_lancamento = lubridate::day(data_lancamento),
-    dia_semana_lancamento = lubridate::wday(data_lancamento, label = TRUE)
-  ) %>%
-  dplyr::filter(dia_lancamento == 6) %>%
-  dplyr::select(titulo, dia_lancamento, dia_semana_lancamento)
+  dplyr::filter(data_lancamento == '2014-11-06') %>%
+  dplyr::select(titulo, data_lancamento) %>%
+  dplyr::rename(
+    Filme = titulo,
+    'Data de Lançamento' = data_lancamento
+  )
 
 imdb  %>%
   dplyr::filter(titulo == "Interstellar") %>%
@@ -528,7 +532,13 @@ imdb  %>%
     idade_dia_lancamento = lubridate::as.period(data_lancamento - meu_aniversario),
     idade_dia_lancamento = idade_dia_lancamento / lubridate::years(1)
   ) %>%
-  dplyr::select(titulo, data_lancamento, meu_aniversario, idade_dia_lancamento)
+  dplyr::select(titulo, data_lancamento, meu_aniversario, idade_dia_lancamento) %>%
+  dplyr::rename(
+    Filme = titulo,
+    'Data Lançamento' = data_lancamento,
+    'Meu Nascimento' = meu_aniversario,
+    'Minha Idade no Lançamento do Filme' = idade_dia_lancamento
+  )
 
  # d) Faça um gráfico representando a distribuição da nota atribuída a esse filme por idade (base `imdb_avaliacoes`).
 
@@ -569,8 +579,14 @@ imdb_avaliacoes %>%
     caption = "Fonte: IMDB Avaliações"
   ) +
   ggplot2::scale_x_discrete(
-    breaks = c("idade_0_18", "idade_18_30", "idade_30_45", "idade_45_mais"),
-    labels = c("0 a 18", "18 a 30", "30 a 45", "45 +")
+    breaks = c("idade_0_18",
+               "idade_18_30",
+               "idade_30_45",
+               "idade_45_mais"),
+    labels = c("0 a 18",
+               "18 a 30",
+               "30 a 45",
+               "45 +")
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
@@ -587,6 +603,72 @@ imdb_avaliacoes %>%
     axis.text.x = ggplot2::element_text(size = 12),
     axis.text.y = ggplot2::element_text(size = 12)
   )
+
+
+imdb_avaliacoes %>%
+  dplyr::filter(id_filme == "tt0816692") %>%
+  dplyr::select(
+    nota_media_idade_0_18,
+    nota_media_idade_18_30,
+    nota_media_idade_30_45,
+    nota_media_idade_45_mais
+  ) %>%
+  dplyr::rename(
+    idade_0_18 = nota_media_idade_0_18,
+    idade_18_30 = nota_media_idade_18_30,
+    idade_30_45 = nota_media_idade_30_45,
+    idade_45_mais = nota_media_idade_45_mais
+  ) %>%
+  tidyr::pivot_longer(
+    cols = dplyr::starts_with("idade"),
+    names_to = "faixa_etaria",
+    values_to = "nota_media") %>%
+  ggplot2::ggplot(ggplot2::aes(x = "", y = nota_media, fill = faixa_etaria)) +
+  ggplot2::geom_bar(
+    stat = "identity",
+    width = 1,
+    color = "#FFFFFF") +
+  ggplot2::geom_text(
+    stat = "identity",
+    ggplot2::aes(label = nota_media),
+    vjust = 1.5,
+    color = "white",
+    size = 6,
+  ) +
+  ggplot2::labs(
+    title = "Notas por faixa etária",
+    x = "Faixa Etária",
+    y = "Nota Média",
+    caption = "Fonte: IMDB Avaliações"
+  ) +
+  ggplot2::scale_x_discrete(
+    breaks = c("idade_0_18",
+               "idade_18_30",
+               "idade_30_45",
+               "idade_45_mais"),
+    labels = c("0 a 18",
+               "18 a 30",
+               "30 a 45",
+               "45 +")
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(
+      size = 22,
+      face = "bold"),
+    plot.caption = ggplot2::element_text(face = "italic"),
+    axis.title.x = ggplot2::element_text(
+      size = 12,
+      face = "bold"),
+    axis.title.y = ggplot2::element_text(
+      size = 12,
+      face = "bold"),
+    axis.text.x = ggplot2::element_text(size = 12),
+    axis.text.y = ggplot2::element_text(size = 12)
+  ) +
+  ggplot2::coord_polar(theta = 'y', start = 0)
+
+
 
 
 
