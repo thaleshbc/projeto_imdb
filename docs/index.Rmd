@@ -1,9 +1,13 @@
 ---
 title: "Análise sobre o conjunto de dados do IMDB"
 author: "Thales Henrique Barros Cardoso"
-output: github_document
-
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
 ---
+
 
 # Análise dos dados do IMDB
 

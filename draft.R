@@ -670,7 +670,7 @@ imdb_avaliacoes %>%
 
 
 
-
+install.packages("prettydoc")
 
 
 lubridate::period(5, "years" )
