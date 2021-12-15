@@ -92,7 +92,9 @@ imdb %>%
   dplyr::count(Mes) %>%
   dplyr::arrange(desc(n)) %>% 
   dplyr::rename(Quantidade = n) %>% 
-  knitr::kable()
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 ```{r, echo=FALSE, fig.align='center'}
 imdb %>%
@@ -386,9 +388,12 @@ qte_filmes_pais %>%
   dplyr::select(pais, qte_filmes) %>% 
   dplyr::filter(qte_filmes > 3500) %>% 
   dplyr::rename(
-    Pais = pais,
-    Qte_Filmes = qte_filmes
-  ) 
+    País = pais,
+    'Quantidade de Filmes' = qte_filmes
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Vamos destacar no mapa mundi os 5 países com mais filmes na base estudada.
@@ -516,6 +521,8 @@ ggplot2::ggplot(qte_filmes_pais, ggplot2::aes(fill = qte_filmes)) +
   ) +
   gghighlight::gghighlight(qte_filmes < 30000) 
 
+rm(list=c("qte_filmes_pais", "sf_world"))
+
 ```
 
 ## 3. Liste todas as moedas que aparecem nas colunas `orcamento` e `receita` da base `imdb_completa`.
@@ -572,12 +579,19 @@ imdb %>%
   dplyr::filter(!is.na(moeda_receita)) %>%
   dplyr::arrange(desc(n)) %>% 
   dplyr::rename(
-    Moeda_receita = moeda_receita,
-    Qte_Filmes = n
+    qte_filmes = n
   ) %>% 
   dplyr::mutate(
-    Porcentagem = Qte_Filmes / sum(Qte_Filmes) * 100
-  )
+    porcentagem = round((qte_filmes / sum(qte_filmes) * 100), 2)
+  ) %>% 
+  dplyr::rename(
+    'Moeda da Receita' = moeda_receita,
+    'Quantidade de Filmes' = qte_filmes,
+    'Porcentagem do Total (%)' = porcentagem
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ## 4. Considerando apenas orçamentos e receitas em dólar ($), qual o gênero com maior lucro? E com maior nota média?
@@ -630,6 +644,7 @@ networkD3::sankeyNetwork(Links = links, Nodes = nodes,
               Value = "value", NodeID = "name", 
               sinksRight=FALSE, fontSize = 12)
 
+rm(list=c("tmp", "nodes", "links"))
 ```
 
 Uma boa coisa a se visualizar é qual o gênero possui mais filmes feitos e depois ver se esse gênero é o que mais lucra.
@@ -702,12 +717,9 @@ imdb %>%
     total_orcamento = sum(valor_orcamento, na.rm = TRUE)
   ) %>% 
   dplyr::arrange(desc(total_lucro)) %>%
-  ggplot2::ggplot(ggplot2::aes(x = forcats::fct_reorder(genero_1, total_lucro), y = total_lucro)) +
+  ggplot2::ggplot(
+    ggplot2::aes(x = forcats::fct_reorder(genero_1, total_lucro), y = total_lucro)) +
   ggplot2::geom_col(fill = "#D8BFD8") + 
-  # ggplot2::geom_text(ggplot2::aes(
-  #   label = paste0(round(total_lucro/1000000000, 1), " B")),
-  #   color = "#000000",
-  #   hjust = 1) +
   ggplot2::theme_bw() +
   ggplot2::labs(
     title = "Lucro por gênero",
@@ -747,7 +759,7 @@ Com essa segunda visualização podemos observar que ter mais filmes feitos em u
 Logo abaixo mostramos a relação entre orçamento, receita e lucro dos filmes com orçamento e receita em dolares. Vamos avaliar se os filmes com maiores orçamentos são os com maiores lucros.
 
 ```{r, echo=FALSE, fig.align='center', warning=FALSE}
-g1 <- imdb %>%
+tmp <- imdb %>%
   dplyr::filter(!is.na(lucro)) %>%
   dplyr::filter(moeda_receita == "USD" & moeda_orcamento == "USD") %>%
   dplyr::select(genero_1, lucro, valor_receita, valor_orcamento) %>%
@@ -760,15 +772,9 @@ g1 <- imdb %>%
   dplyr::arrange(desc(total_lucro)) %>% 
   dplyr::filter(total_lucro > 1000000000)
 
-ggplot2::ggplot(g1, ggplot2::aes(x = total_orcamento, y = total_receita, color = genero_1)) +
+ggplot2::ggplot(tmp, ggplot2::aes(x = total_orcamento, y = total_receita, color = genero_1)) +
   ggplot2::geom_point(ggplot2::aes(size = total_lucro, alpha = 0.5)) +
   ggplot2::scale_size(range = c(.1, 20), name = "Lucro \nTotal") +
-  # ggplot2::geom_text(ggplot2::aes(
-  #   label = genero_1,
-  #   size = 50000,
-  #   color = "#000000",
-  #   hjust = 1)
-  # ) +
   ggplot2::theme_bw() +
   ggplot2::labs(
     title = "Orçamento X Receita",
@@ -806,14 +812,13 @@ ggplot2::ggplot(g1, ggplot2::aes(x = total_orcamento, y = total_receita, color =
      breaks = seq(0, 12e+10, 2e+10),
      labels = c("0", "20", "40", "60", "80", "100", "120")
   ) +
-  # ggplot2::scale_fill_discrete(name = "Lucro \nTotal") +
-  # ggplot2::scale_color_discrete(guide = 'none') +
-  # ggplot2::scale_alpha(guide = 'none') +
   ggrepel::geom_label_repel(
-    data = subset(g1, total_lucro > 3000000000),
+    data = subset(tmp, total_lucro > 3000000000),
     ggplot2::aes(label = paste(genero_1, paste(round(total_lucro/1000000000, 1), " B"), sep = "\n")),
     size = 2.5
   )
+
+rm(tmp)
 ```
 
 ## 5. Dentre os filmes na base `imdb_completa`, escolha o seu favorito. Então faça os itens a seguir:
@@ -828,24 +833,32 @@ Abaixo temo o diretor do filme.
 imdb %>%
   dplyr::filter(titulo == "Interstellar") %>%
   dplyr::select(direcao) %>% 
-  dplyr::rename(Diretor = direcao)
+  dplyr::rename(Diretor = direcao) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-Aqui temos a data de nascimento e a sua idade atual.
+Aqui temos a data de nascimento e a sua idade ao dia que o relatório foi gerado.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 imdb_pessoas %>%
   dplyr::filter(nome == "Christopher Nolan") %>%
   dplyr::mutate(
     idade = lubridate::as.period(Sys.Date() - data_nascimento),
-    idade = round(idade / lubridate::years(1), 2)
+    idade = round(idade / lubridate::years(1), 2),
+    data_relatorio = Sys.Date()
   ) %>%
-  dplyr::select(nome,data_nascimento, idade) %>% 
+  dplyr::select(nome,data_nascimento, data_relatorio, idade) %>% 
   dplyr::rename(
     Diretor = nome,
     'Data de Nascimento' = data_nascimento,
-    Idade = idade
-  )
+    Idade = idade,
+    'Data de geração do relatório' = data_relatorio
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Logo em seguida o local de nascimento de Christopher Nolan.
@@ -858,7 +871,10 @@ imdb_pessoas %>%
     col = local_nascimento,
     into = c("Cidade", "País"),
     sep = ","
-  )
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Na sequência a quantidade de filmes feitos por Christopher Nolan.
@@ -870,7 +886,10 @@ imdb %>%
   dplyr::rename(
     Diretor = direcao,
     'Quantidade de Filmes' = n
-  )
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 No gráfico abaixo será mostrado o lucro por filme, ordenado por ano e com o valor médio do lucro dos filmes de Christopher Nolan.
@@ -958,7 +977,13 @@ Primeiro devemos saber qual o ID do filme para poder utilizar essa base com as n
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 imdb %>%
   dplyr::filter(titulo == "Interstellar") %>%
-  dplyr::select(titulo, id_filme)
+  dplyr::select(titulo, id_filme) %>% 
+  dplyr::rename(
+    'Título' = titulo
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Podemos observar abaixo que pela nota média o filme Interstellar está na posição 680 no rank.
@@ -974,7 +999,10 @@ imdb_avaliacoes %>%
   dplyr::rename(
     'Rank Nota' = ranking_nota,
     'Nota Média' = nota_media
-  )
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Em relação a posição do filme no rank de maiores lucros obtido na moeda dolar, vemos abaixo que ele ficou na posição 133.
@@ -992,12 +1020,17 @@ tmp %>%
   dplyr::filter(titulo == "Interstellar") %>%
   dplyr::select(ranking_lucro, lucro) %>% 
   dplyr::mutate(
-    lucro = format(lucro, big.mark = ".")
+    lucro = paste("USD", format(lucro, big.mark = "."))
   ) %>%
   dplyr::rename(
     'Rank Lucro' = ranking_lucro,
     Lucro = lucro
-  )
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
+
+rm(tmp)
 ```
 
 ### c) Em que dia esse filme foi lançado? E dia da semana? Algum outro filme foi lançado no mesmo dia? Quantos anos você tinha nesse dia?
@@ -1015,7 +1048,10 @@ imdb %>%
     Filme = titulo,
     'Data Lançamento' = data_lancamento,
     'Dia da Semana' = dia_semana_lancamento
-  )
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Agora na sequência veremos quais foram os filmes lançados no mesmo dia que Interstellar.
@@ -1027,7 +1063,10 @@ imdb %>%
   dplyr::rename(
     Filme = titulo,
     'Data de Lançamento' = data_lancamento
-  ) 
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 Agora veremos a minha idade em anos quando Interstellar foi lançado.
@@ -1046,7 +1085,10 @@ imdb  %>%
     'Data Lançamento' = data_lancamento,
     'Meu Nascimento' = meu_aniversario,
     'Minha Idade no Lançamento do Filme' = idade_dia_lancamento
-  )
+  ) %>% 
+  kableExtra::kbl() %>% 
+  kableExtra::kable_paper(bootstrap_options = "striped", full_width = F) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ### d) Faça um gráfico representando a distribuição da nota atribuída a esse filme por idade (base `imdb_avaliacoes`).
